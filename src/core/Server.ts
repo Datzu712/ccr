@@ -6,6 +6,7 @@ import type { ServerOptions as httpsServerOptions } from 'https';
 import { requestLogger } from '../helper/requestLogger';
 import { Logger, type LoggerService } from '../core/log/logger.service';
 import { enableHttps } from '../config/config.env.constants';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export interface ServerOptions {
     /**
@@ -90,6 +91,24 @@ export class Server {
         if (Object.keys(this.httpsConfig).length && Boolean(enableHttps)) {
             this.app.enableCors();
         }
+
+        const config = new DocumentBuilder()
+            .setTitle('Corres de Costa Rica API Wrapper')
+            .setDescription('API Wrapper for Corres de Costa Rica')
+            .setVersion('1.0')
+            .addTag('ccr')
+            .addApiKey({
+                type: 'apiKey',
+                name: 'authorization',
+                description: 'API Access Token',
+                in: 'authorization',
+            })
+            .addBearerAuth()
+            .setVersion('1.0')
+            .build();
+
+        const document = SwaggerModule.createDocument(this.app, config);
+        SwaggerModule.setup('docs', this.app, document);
 
         await this.app.listen(this.PORT, this.HOST);
         this.logger.log(
